@@ -1,0 +1,5 @@
+include radar_graph/bundle.js
+include radar_graph/bundle.js.map
+include radar_graph/metadata.json
+include README.md
+include LICENSE.md

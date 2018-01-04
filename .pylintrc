@@ -1,0 +1,12 @@
+[MASTER]
+
+extension-pkg-whitelist=dash_core_components,dash_html_components,numpy,matplotlib,matplotlib.cm,radar_graph
+
+[TYPECHECK]
+
+ignored-modules=dash_core_components,dash_html_components,numpy,matplotlib,matplotlib.cm,radar_graph
+ignored-classes=dash_core_components,dash_html_components,numpy,matplotlib,matplotlib.cm,radar_graph
+
+[BASIC]
+
+disable=I0011,C0103,W0122
