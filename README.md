@@ -1,4 +1,4 @@
-# radar-graph
+# plotly-dash-radar-graph
 
 A Ployly Dash radar graph component.
 
