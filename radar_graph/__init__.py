@@ -16,10 +16,6 @@ _this_module = _sys.modules[__name__]
 _js_dist = [
     {
         "relative_package_path": "bundle.js",
-        "external_url": (
-            "https://unpkg.com/radar-graph@{}"
-            "/radar_graph/bundle.js"
-        ).format(__version__),
         "namespace": "radar_graph"
     }
 ]
