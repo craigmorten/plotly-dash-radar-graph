@@ -4,26 +4,32 @@ import d3 from 'd3';
 
 const RadarChart = {
     draw: (_id, _legend, _d, _options) => {
+        console.log('RadarChart.draw', _id, _legend, _d, _options);
+
         // Set the defaults
         let defaultConfig = {
+            defaultColor: 'grey',
+            defaultFontFamily: 'sans-serif',
+            defaultFontSize: '12px',
+
             title: '',
 
             radius: 5,
             
-            width: 600,
-            height: 600,
+            width: 500,
+            height: 500,
 
             factor: 1,
             factorLegend: 0.85,
 
-            maxValue: 0,
+            maxValue: 1,
 
             radians: 2 * Math.PI,
 
             toRight: 5,
 
-            translateX: 50,
-            translateY: 30,
+            translateX: 100,
+            translateY: 90,
 
             extraWidthX: 100,
             extraWidthY: 100,
@@ -33,36 +39,36 @@ const RadarChart = {
             titleX: 0,
             titleY: 50,
             titleFontSize: '18px',
-            titleFontFamily: 'sans-serif',
-            titleFontColor: '#000000',
+            titleFontFamily: '',
+            titleColor: '',
 
             legendRight: '150',
             legendTop: '40',
-            legendFontSize: '11px',
-            legendFontFamily: 'sans-serif',
-            legendColor: 'grey',
+            legendFontSize: '',
+            legendFontFamily: '',
+            legendColor: '',
             legendSquareSize: 10,
 
-            levels: 3,
+            levels: 10,
             levelsStrokeColor: 'grey',
             levelsStrokeOpacity: '0.7',
             levelsStrokeWidth: '1',
 
-            axisTickFontFamily: 'sans-serif',
-            axisTickFontSize: '8px',
-            axisTickColor: 'grey',
+            axisTickFontFamily: '',
+            axisTickFontSize: '',
+            axisTickColor: '',
 
-            axisLabelFontFamily: 'sans-serif',
-            axisLabelFontSize: '10px',
-            axisLabelColor: 'grey',
+            axisLabelFontFamily: '',
+            axisLabelFontSize: '',
+            axisLabelColor: '',
             axisLabelTextAnchor: 'middle',
 
             axisStrokeColor: '#000000',
             axisStrokeWidth: '1',
 
-            tooltipFontFamily: 'sans-serif',
-            tooltipFontSize: '12px',
-            tooltipColor: '#000000',
+            tooltipFontFamily: '',
+            tooltipFontSize: '',
+            tooltipColor: '',
 
             areaBorderWidth: '2px',
 
@@ -74,6 +80,14 @@ const RadarChart = {
 
             nodeOpacity: '0.7'
         };
+
+        if (!_d || _d.length === 0 || _d[0].length === 0) {
+            return;
+        }
+
+        if (!_legend) {
+            _legend = [];
+        }
 
         // Set overrides
         if ('undefined' !== typeof _options) {
@@ -115,9 +129,9 @@ const RadarChart = {
         // Tooltip
         let tooltip = g.append('text')
             .style('opacity', 0)
-            .attr('fill', defaultConfig.tooltipColor)
-            .style('font-family', defaultConfig.tooltipFontFamily)
-            .style('font-size', defaultConfig.tooltipFontSize);
+            .attr('fill', defaultConfig.tooltipColor || defaultConfig.defaultColor)
+            .style('font-family', defaultConfig.tooltipFontFamily || defaultConfig.defaultFontFamily)
+            .style('font-size', defaultConfig.tooltipFontSize || defaultConfig.defaultFontSize);
 
         // Circular segments
         for (let j = 0; j < defaultConfig.levels - 1; j++) {
@@ -157,10 +171,10 @@ const RadarChart = {
                 .attr('x', levelFactor * (1 - defaultConfig.factor * Math.sin(0)))
                 .attr('y', levelFactor * (1 - defaultConfig.factor * Math.cos(0)))
                 .attr('class', 'legend')
-                .style('font-family', defaultConfig.axisTickFontFamily)
-                .style('font-size', defaultConfig.axisTickFontSize)
+                .style('font-family', defaultConfig.axisTickFontFamily || defaultConfig.defaultFontFamily)
+                .style('font-size', defaultConfig.axisTickFontSize || defaultConfig.defaultFontSize)
                 .attr('transform', 'translate(' + (defaultConfig.width / 2 - levelFactor + defaultConfig.toRight) + ', ' + (defaultConfig.height / 2 - levelFactor) + ')')
-                .attr('fill', defaultConfig.axisTickColor)
+                .attr('fill', defaultConfig.axisTickColor || defaultConfig.defaultColor)
                 .text(Format((j + 1) * defaultConfig.maxValue / defaultConfig.levels));
         }
 
@@ -190,8 +204,9 @@ const RadarChart = {
             .text((d) => {
                 return d;
             })
-            .style('font-family', defaultConfig.axisLabelFontFamily)
-            .style('font-size', defaultConfig.axisLabelFontSize)
+            .attr('fill', defaultConfig.axisLabelColor || defaultConfig.defaultColor)
+            .style('font-family', defaultConfig.axisLabelFontFamily || defaultConfig.defaultFontFamily)
+            .style('font-size', defaultConfig.axisLabelFontSize || defaultConfig.defaultFontSize)
             .attr('text-anchor', defaultConfig.axisLabelTextAnchor)
             .attr('dy', '1.5em')
             .attr('transform', () => {
@@ -205,58 +220,6 @@ const RadarChart = {
             });
 
         _d.forEach((y) => {
-            let dataValues = [];
-
-            g.selectAll('.nodes')
-                .data(y, (j, i) => {
-                    dataValues.push([
-                        defaultConfig.width / 2 * (1 - (parseFloat(Math.max(j.value, 0)) / defaultConfig.maxValue) * defaultConfig.factor * Math.sin(i * defaultConfig.radians / total)),
-                        defaultConfig.height / 2 * (1 - (parseFloat(Math.max(j.value, 0)) / defaultConfig.maxValue) * defaultConfig.factor * Math.cos(i * defaultConfig.radians / total))
-                    ]);
-                });
-
-            dataValues.push(dataValues[0]);
-
-            g.selectAll('.area')
-                .data([dataValues])
-                .enter()
-                .append('polygon')
-                .attr('class', 'radar-chart-serie-' + series)
-                .style('stroke-width', defaultConfig.areaBorderWidth)
-                .style('stroke', defaultConfig.color(series))
-                .attr('points', (d) => {
-                    let str = '';
-                    for (let pti = 0; pti < d.length; pti++) {
-                        str = str + d[pti][0] + ',' + d[pti][1] + ' ';
-                    }
-                    return str;
-                })
-                .style('fill', () => {
-                    return defaultConfig.color(series);
-                })
-                .style('fill-opacity', defaultConfig.areaOpacity)
-                .on('mouseover', function () {
-                    let z = 'polygon.' + d3.select(this).attr('class');
-                    g.selectAll('polygon')
-                        .transition(300)
-                        .style('fill-opacity', defaultConfig.areaOtherOpacityAreaHover);
-                    g.selectAll(z)
-                        .transition(300)
-                        .style('fill-opacity', defaultConfig.areaOpacityAreaHover);
-                })
-                .on('mouseout', () => {
-                    g.selectAll('polygon')
-                        .transition(300)
-                        .style('fill-opacity', defaultConfig.areaOpacity);
-                });
-            series++;
-        });
-
-        series = 0;
-
-        _d.forEach((y) => {
-            let dataValues = [];
-
             g.selectAll('.nodes')
                 .data(y)
                 .enter()
@@ -267,10 +230,6 @@ const RadarChart = {
                     return Math.max(j.value, 0);
                 })
                 .attr('cx', (j, i) => {
-                    dataValues.push([
-                        defaultConfig.width / 2 * (1 - (parseFloat(Math.max(j.value, 0)) / defaultConfig.maxValue) * defaultConfig.factor * Math.sin(i * defaultConfig.radians / total)),
-                        defaultConfig.height / 2 * (1 - (parseFloat(Math.max(j.value, 0)) / defaultConfig.maxValue) * defaultConfig.factor * Math.cos(i * defaultConfig.radians / total))
-                    ]);
                     return defaultConfig.width / 2 * (1 - (Math.max(j.value, 0) / defaultConfig.maxValue) * defaultConfig.factor * Math.sin(i * defaultConfig.radians / total));
                 })
                 .attr('cy', (j, i) => {
@@ -313,6 +272,50 @@ const RadarChart = {
                     return Math.max(j.value, 0);
                 });
 
+            let dataValuesArea = [];
+
+            g.selectAll('.nodes')
+                .data(y, (j, i) => {
+                    dataValuesArea.push([
+                        defaultConfig.width / 2 * (1 - (parseFloat(Math.max(j.value, 0)) / defaultConfig.maxValue) * defaultConfig.factor * Math.sin(i * defaultConfig.radians / total)),
+                        defaultConfig.height / 2 * (1 - (parseFloat(Math.max(j.value, 0)) / defaultConfig.maxValue) * defaultConfig.factor * Math.cos(i * defaultConfig.radians / total))
+                    ]);
+                });
+
+                dataValuesArea.push(dataValuesArea[0]);
+
+            g.selectAll('.area')
+                .data([dataValuesArea])
+                .enter()
+                .append('polygon')
+                .attr('class', 'radar-chart-serie-' + series)
+                .style('stroke-width', defaultConfig.areaBorderWidth)
+                .style('stroke', defaultConfig.color(series))
+                .attr('points', (d) => {
+                    let str = '';
+                    for (let pti = 0; pti < d.length; pti++) {
+                        str = str + d[pti][0] + ',' + d[pti][1] + ' ';
+                    }
+                    return str;
+                })
+                .style('fill', () => {
+                    return defaultConfig.color(series);
+                })
+                .style('fill-opacity', defaultConfig.areaOpacity)
+                .on('mouseover', function () {
+                    let z = 'polygon.' + d3.select(this).attr('class');
+                    g.selectAll('polygon')
+                        .transition(300)
+                        .style('fill-opacity', defaultConfig.areaOtherOpacityAreaHover);
+                    g.selectAll(z)
+                        .transition(300)
+                        .style('fill-opacity', defaultConfig.areaOpacityAreaHover);
+                })
+                .on('mouseout', () => {
+                    g.selectAll('polygon')
+                        .transition(300)
+                        .style('fill-opacity', defaultConfig.areaOpacity);
+                });
             series++;
         });
 
@@ -327,9 +330,9 @@ const RadarChart = {
             .attr('transform', 'translate(90,0)')
             .attr('x', defaultConfig.titleX)
             .attr('y', defaultConfig.titleY)
-            .attr('font-size', defaultConfig.titleFontSize)
-            .attr('font-family', defaultConfig.titleFontFamily)
-            .attr('fill', defaultConfig.titleColor)
+            .attr('font-size', defaultConfig.titleFontSize || defaultConfig.defaultFontSize)
+            .attr('font-family', defaultConfig.titleFontFamily || defaultConfig.defaultFontFamily)
+            .attr('fill', defaultConfig.titleColor || defaultConfig.defaultColor)
             .text(defaultConfig.title);
 
         const legend = svg.append('g')
@@ -360,9 +363,9 @@ const RadarChart = {
             .attr('y', (d, i) => {
                 return i * 20 + 9;
             })
-            .attr('font-size', defaultConfig.legendFontSize)
-            .attr('font-family', defaultConfig.legendFontFamily)
-            .attr('fill', defaultConfig.legendColor)
+            .attr('font-size', defaultConfig.legendFontSize || defaultConfig.defaultFontSize)
+            .attr('font-family', defaultConfig.legendFontFamily || defaultConfig.defaultFontFamily)
+            .attr('fill', defaultConfig.legendColor || defaultConfig.defaultColor)
             .text((d) => {
                 return d;
             });
@@ -374,9 +377,30 @@ const RadarChart = {
  */
 export default class RadarGraph extends Component {
     plot(props) {
+        console.log('plot', this.props);
+
         const {id, config} = props;
 
-        config.maxValue /= 100;
+        if (!config || !config.data || config.data.length === 0 || config.data[0].length === 0) {
+            return;
+        }
+
+        if (config.maxValue) {
+            config.maxValue /= 100;
+        }
+
+        if (config.color) {
+            console.log(d3.scale.category10());
+            console.log(config.color);
+            
+            const colours = config.color.map((v) => {
+                return `rgba(${v[0]*255}, ${v[1]*255}, ${v[2]*255}, ${v[3]})`;
+            });
+
+            config.color = function(i) {
+                return colours[i];
+            };
+        }
 
         const parsedData = config.data.map((v) => {
             return v.map((_v) => {
@@ -389,22 +413,26 @@ export default class RadarGraph extends Component {
     }
 
     componentDidMount() {
+        console.log('componentDidMount', this.props);
         this.plot(this.props);
     }
 
     componentWillUnmount() {
+        console.log('componentWillUnmount', this.props);
         if (this.eventEmitter) {
             this.eventEmitter.removeAllListeners();
         }
     }
 
     shouldComponentUpdate(nextProps) {
+        console.log('shouldComponentUpdate', this.props);
         return (
-            this.props.id !== nextProps.id || JSON.stringify(this.props.style) !== JSON.stringify(nextProps.style)
+            (this.props.id !== nextProps.id) || (JSON.stringify(this.props.style) !== JSON.stringify(nextProps.style))
         );
     }
 
     componentWillReceiveProps(nextProps) {
+        console.log('componentWillReceiveProps', this.props);
         const idChanged = (this.props.id !== nextProps.id);
         if (idChanged) {
             /*
@@ -421,12 +449,14 @@ export default class RadarGraph extends Component {
     }
 
     componentDidUpdate(prevProps) {
+        console.log('componentDidUpdate', this.props);
         if (prevProps.id !== this.props.id) {
             this.plot(this.props);
         }
     }
 
     render() {
+        console.log('render', this.props);
         const {id, style, className} = this.props;
 
         return (
@@ -444,12 +474,12 @@ RadarGraph.propTypes = {
     /**
      * The ID used to identify this graph in Dash callbacks.
      */
-    id: PropTypes.string,
+    id: PropTypes.string.isRequired,
 
     /**
      * Generic style overrides on the plot div.
      */
-    style: PropTypes.object,
+    style: PropTypes.any,
 
     /**
      * className of the parent div.
@@ -488,7 +518,7 @@ RadarGraph.propTypes = {
         /**
          * The radar chart title's text color
          */
-        titleFontColor: PropTypes.string,
+        titleColor: PropTypes.string,
 
         /**
          * The radius of the nodes.
@@ -553,7 +583,7 @@ RadarGraph.propTypes = {
         /**
          * The color array for the area plots
          */
-        color: PropTypes.object,
+        color: PropTypes.any,
 
         /**
          * The number of ticks on the radar graph axis.
@@ -563,7 +593,14 @@ RadarGraph.propTypes = {
         /**
          * The radar chart data
          */
-        data: PropTypes.array,
+        data: PropTypes.arrayOf(
+            PropTypes.arrayOf(
+                PropTypes.shape({
+                    axis: PropTypes.string.isRequired,
+                    value: PropTypes.number.isRequired
+                })
+            )
+        ).isRequired,
 
         /**
          * The radar chart legend entries
@@ -721,10 +758,6 @@ RadarGraph.propTypes = {
 RadarGraph.defaultProps = {
     config: {
         title: 'Demo Radar Graph',
-        width: 500,
-        height: 500,
-        levels: 10,
-        maxValue: 100,
         data: [
             [
                 {
